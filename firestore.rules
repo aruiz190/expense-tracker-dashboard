@@ -1,0 +1,18 @@
+// Firestore security rules (paste into Firebase console or deploy via CLI)
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /transactions/{txId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId
+          && request.resource.data.keys().hasAll(['amount','type','category','date'])
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.type in ['income','expense']
+          && request.resource.data.date.matches('^\\d{4}-\\d{2}-\\d{2}$');
+      }
+    }
+  }
+}
